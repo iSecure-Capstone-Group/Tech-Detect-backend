@@ -37,7 +37,7 @@ app.use('/incidents', authMiddleware, incidentRoutes);
 app.use('/security', authMiddleware, securityRoutes);
 
 // Serve the static files from the React build directory
-const frontendBuildPath = path.resolve(__dirname, '..', 'Tech-Detect-Frontend', 'build');
+const frontendBuildPath = path.resolve(__dirname, '..', 'Tech-Detect-final', 'build');
 console.log('Serving static files from:', frontendBuildPath);
 app.use(express.static(frontendBuildPath));
 

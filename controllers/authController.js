@@ -7,7 +7,6 @@ exports.register = async (req, res, next) => {
     try {
         const { name, email, password } = req.body;
 
-        // Correctly using finder method with 'where' to check for existing user
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: 'User with this email already exists.' });
@@ -17,7 +16,6 @@ exports.register = async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 12);
 
         // Create a new user instance with the hashed password
-        // Assuming your User model expects a field 'username' but your API accepts 'name'
         const newUser = await User.create({ username: name, email, password: hashedPassword });
 
         // Optionally, generate a JWT token for the user and include it in the response
@@ -27,7 +25,11 @@ exports.register = async (req, res, next) => {
             { expiresIn: '1h' }
         );
 
-        res.status(201).json({ message: 'User registered successfully', token });
+        res.status(201).json({ 
+            message: 'User registered successfully', 
+            user: { id: newUser.id, username: newUser.username, email: newUser.email },
+            token 
+        });
     } catch (error) {
         console.error('Error registering user:', error);
         next(error);
@@ -57,8 +59,11 @@ exports.login = async (req, res, next) => {
             { expiresIn: '1h' }
         );
 
-        // Send the token in the response
-        res.status(200).json({ token });
+        // Send the token and user details in the response
+        res.status(200).json({ 
+            token,
+            user: { id: user.id, username: user.username, email: user.email }
+        });
     } catch (error) {
         console.error('Error logging in user:', error);
         next(error);
@@ -66,7 +71,6 @@ exports.login = async (req, res, next) => {
 };
 
 exports.logout = async (req, res, next) => {
-    // Since JWTs are stateless, logging out can't be handled server-side in the traditional sense.
     // Typically, you would instruct the client to delete the stored token.
     res.status(200).json({ message: 'Logout successful. Please delete your token client-side.' });
 };
