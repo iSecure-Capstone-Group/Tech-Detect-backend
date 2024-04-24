@@ -5,18 +5,30 @@ const crypto = require('crypto');
 
 exports.register = async (req, res, next) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, phoneNumber, companyName } = req.body;
 
+        // Check for existing user by email
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
             return res.status(400).json({ message: 'User with this email already exists.' });
         }
 
+        // Optionally, validate phoneNumber or companyName if they are required
+        if (phoneNumber && companyName) {
+            // Additional validations can be added here if needed
+        }
+
         // Hash the password before saving to the database
         const hashedPassword = await bcrypt.hash(password, 12);
 
-        // Create a new user instance with the hashed password
-        const newUser = await User.create({ username: name, email, password: hashedPassword });
+        // Create a new user instance with the hashed password and additional fields
+        const newUser = await User.create({
+            username: name,
+            email,
+            password: hashedPassword,
+            phoneNumber,
+            companyName
+        });
 
         // Optionally, generate a JWT token for the user and include it in the response
         const token = jwt.sign(
@@ -26,15 +38,17 @@ exports.register = async (req, res, next) => {
         );
 
         res.status(201).json({ 
-            message: 'User registered successfully', 
-            user: { id: newUser.id, username: newUser.username, email: newUser.email },
+            message: 'User registered successfully',
+            user: { id: newUser.id, username: newUser.username, email: newUser.email, phoneNumber, companyName },
             token 
         });
     } catch (error) {
         console.error('Error registering user:', error);
+        res.status(500).json({ message: 'Failed to register user.', error: error.message });
         next(error);
     }
 };
+
 
 exports.login = async (req, res, next) => {
     try {
